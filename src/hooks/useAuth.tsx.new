@@ -63,7 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { toast } = useToast();
 
   const fetchProfile = async (userId: string) => {
-    const { data: rawData, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -78,29 +78,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return null;
     }
 
-    if (!rawData) return null;
-
-    // Transform raw data into the required shape
-    const data = {
-      id: rawData.id,
-      email: rawData.email,
-      full_name: `${rawData.first_name} ${rawData.last_name}`.trim(),
-      role: 'student' as UserRole, // Default to student
-      avatar_url: null,
-      created_at: rawData.created_at,
-      updated_at: rawData.updated_at
-    } satisfies DbProfile;
-
-    return data;
-
+    const dbProfile = data as DbProfile;
     return {
-      id: data.id,
-      email: data.email,
-      full_name: data.full_name,
-      role: data.role,
-      avatar_url: data.avatar_url || undefined,
-      created_at: new Date(data.created_at).toISOString(),
-      updated_at: new Date(data.updated_at).toISOString(),
+      id: dbProfile.id,
+      email: dbProfile.email,
+      full_name: dbProfile.full_name,
+      role: dbProfile.role,
+      avatar_url: dbProfile.avatar_url || undefined,
     };
   };
 
