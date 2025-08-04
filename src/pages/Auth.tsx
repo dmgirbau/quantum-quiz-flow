@@ -26,7 +26,7 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signUp(email, password, firstName, lastName);
+    await signUp(email, password, `${firstName} ${lastName}`.trim());
     setLoading(false);
   };
 

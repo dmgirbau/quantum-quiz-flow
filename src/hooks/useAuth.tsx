@@ -39,6 +39,7 @@ interface AuthContextType {
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
+  userRole: UserRole | null;
   isAdmin: boolean;
   isProfessor: boolean;
   isStudent: boolean;
@@ -80,27 +81,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (!rawData) return null;
 
-    // Transform raw data into the required shape
-    const data = {
+    return {
       id: rawData.id,
       email: rawData.email,
       full_name: `${rawData.first_name} ${rawData.last_name}`.trim(),
-      role: 'student' as UserRole, // Default to student
-      avatar_url: null,
-      created_at: rawData.created_at,
-      updated_at: rawData.updated_at
-    } satisfies DbProfile;
-
-    return data;
-
-    return {
-      id: data.id,
-      email: data.email,
-      full_name: data.full_name,
-      role: data.role,
-      avatar_url: data.avatar_url || undefined,
-      created_at: new Date(data.created_at).toISOString(),
-      updated_at: new Date(data.updated_at).toISOString(),
+      role: 'student' as UserRole,
+      avatar_url: undefined,
     };
   };
 
@@ -237,6 +223,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     profile,
     loading,
+    userRole: profile?.role || null,
     isAdmin: profile?.role === 'admin',
     isProfessor: profile?.role === 'professor',
     isStudent: profile?.role === 'student',
