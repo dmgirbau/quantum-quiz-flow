@@ -15,6 +15,7 @@ import {
   Activity
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import UserApproval from './UserApproval';
 
 interface UserRole {
   id: string;
@@ -161,6 +162,11 @@ export const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* User Approval Section */}
+        <div className="mb-8">
+          <UserApproval />
         </div>
 
         {/* Quick Actions */}

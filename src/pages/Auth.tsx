@@ -6,14 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen, Calculator, Brain } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'student' | 'professor'>('student');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { user, signUp, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
@@ -26,21 +30,55 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signUp(email, password, `${firstName} ${lastName}`.trim());
-    setLoading(false);
+    setError('');
+    
+    try {
+      await signUp(email, password, `${firstName} ${lastName}`.trim());
+      
+      // Insert pending role request
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          role: selectedRole,
+          status: 'pending'
+        });
+      
+      if (roleError) {
+        console.error('Error inserting role:', roleError);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al crear la cuenta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signIn(email, password);
-    setLoading(false);
+    setError('');
+    
+    try {
+      await signIn(email, password);
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    await signInWithGoogle();
-    setLoading(false);
+    setError('');
+    
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesión con Google');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,6 +118,12 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="signin" className="space-y-4">
+                {error && (
+                  <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+                    {error}
+                  </div>
+                )}
+                
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
@@ -154,6 +198,12 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-4">
+                {error && (
+                  <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+                    {error}
+                  </div>
+                )}
+                
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -199,6 +249,21 @@ const Auth = () => {
                       required
                       minLength={6}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Tipo de cuenta</Label>
+                    <Select value={selectedRole} onValueChange={(value: 'student' | 'professor') => setSelectedRole(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona tu rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">Estudiante</SelectItem>
+                        <SelectItem value="professor">Profesor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Tu cuenta será revisada por un administrador antes de ser activada.
+                    </p>
                   </div>
                   <Button
                     type="submit"

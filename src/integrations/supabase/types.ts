@@ -406,21 +406,30 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           created_at: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
+          status: string | null
           user_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
+          status?: string | null
           user_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          status?: string | null
           user_id?: string
         }
         Relationships: []
@@ -430,13 +439,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_user_role: {
+        Args: {
+          target_user_id: string
+          approved_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
     }
     Enums: {
-      app_role: "admin" | "professor" | "student"
+      app_role:
+        | "admin"
+        | "professor"
+        | "student"
+        | "pending_student"
+        | "pending_professor"
       exam_status: "draft" | "published" | "archived"
       question_status: "not_visited" | "visited" | "answered"
       question_type: "multiple_choice" | "true_false" | "numeric_with_unit"
@@ -567,7 +588,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "professor", "student"],
+      app_role: [
+        "admin",
+        "professor",
+        "student",
+        "pending_student",
+        "pending_professor",
+      ],
       exam_status: ["draft", "published", "archived"],
       question_status: ["not_visited", "visited", "answered"],
       question_type: ["multiple_choice", "true_false", "numeric_with_unit"],
